@@ -2,6 +2,14 @@
 
 Client-approval prototype mapped to **Pusti 2026** workbook (not a full ERP backend).
 
+## Live demo (GitHub Pages)
+
+**https://shaonsarwar.github.io/pusti-erp-prototype/**
+
+Repo: https://github.com/ShaonSarwar/pusti-erp-prototype
+
+Open on phone or PC browser — no install.
+
 ## Sheet reality (3 layers)
 
 | Layer | Sheet area | Meaning | Prototype screens |
