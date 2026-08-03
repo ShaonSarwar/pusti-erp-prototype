@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>বিক্রয় ইনভয়েস — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <button class="btn btn-primary" data-toast="লোড শিট থেকে ইনভয়েস (ডেমো)">লোড শিট → ইনভয়েস</button>
+      <button class="btn btn-ghost" data-toast="ম্যানুয়াল ইনভয়েস (ডেমো)">+ ম্যানুয়াল</button>
+    </div>
+    <div class="panel">
+      <table class="data" id="tbl"></table>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "sales-invoices",
+      title: "বিক্রয় ইনভয়েস",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead><tr><th>নম্বর</th><th>তারিখ</th><th>গ্রাহক / রুট</th><th class="num">পরিমাণ</th><th>অবস্থা</th><th></th></tr></thead>
+          <tbody>${SAMPLE.invoices.map(i => `
+            <tr>
+              <td><strong>${i.no}</strong></td>
+              <td>${i.date}</td><td>${i.party}</td>
+              <td class="num">${fmt(i.amount)}</td>
+              <td><span class="tag${i.status.includes("পরিশোধিত") && !i.status.includes("আংশিক") ? "" : " tag-warn"}">${i.status}</span></td>
+              <td><button class="btn btn-ghost btn-sm" data-toast="প্রিভিউ (ডেমো)">দেখুন</button></td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

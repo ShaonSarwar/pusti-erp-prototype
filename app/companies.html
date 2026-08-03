@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>কোম্পানি — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      <strong>PUSTI</strong> যেসব প্রিন্সিপাল কোম্পানির পণ্য ডিস্ট্রিবিউট করে — নিচে তালিকা।
+      নতুন কোম্পানির লাইন (পণ্য) যেকোনো সময় যোগ করা যাবে।
+    </p>
+    <div class="toolbar">
+      <span class="muted">প্রিন্সিপাল কোম্পানি</span>
+      <span class="spacer"></span>
+      <button class="btn btn-primary" data-toast="কোম্পানি যোগ (ডেমো)">+ কোম্পানি</button>
+    </div>
+    <div class="grid grid-3" id="list"></div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "companies",
+      title: "কোম্পানি (প্রিন্সিপাল)",
+      onReady() {
+        document.getElementById("list").innerHTML = SAMPLE.companies.map(c => {
+          const count = SAMPLE.products.filter(p => p.company === c.name).length;
+          return `
+          <div class="panel">
+            <h2 style="margin:0 0 8px;font-size:1.05rem">${c.name}</h2>
+            <p class="muted" style="margin:0 0 6px">${c.note || ""}</p>
+            <p style="margin:0"><span class="tag">${count} টি SKU</span> (শীট + নতুন)</p>
+            <div style="margin-top:12px">
+              <a class="btn btn-ghost btn-sm" href="products.html">পণ্য দেখুন</a>
+            </div>
+          </div>`;
+        }).join("");
+      }
+    });
+  </script>
+</body>
+</html>

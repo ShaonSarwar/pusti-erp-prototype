@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CRM — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <button class="btn btn-primary" data-toast="নোট যোগ (ডেমো)">+ ফলোআপ নোট</button>
+    </div>
+    <div class="grid grid-3" id="list"></div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "crm",
+      title: "CRM — গ্রাহক ফলোআপ",
+      onReady() {
+        document.getElementById("list").innerHTML = SAMPLE.crm.map(c => `
+          <div class="panel">
+            <div class="panel-head">
+              <h2 style="font-size:1rem">${c.party}</h2>
+              <span class="tag">${c.status}</span>
+            </div>
+            <p style="margin:0 0 8px">${c.note}</p>
+            <p class="muted" style="margin:0">পরবর্তী তারিখ: ${c.follow}</p>
+          </div>`).join("");
+      }
+    });
+  </script>
+</body>
+</html>

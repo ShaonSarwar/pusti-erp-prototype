@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>স্টক — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      <strong>স্টক = গুদামে এখন কী আছে।</strong> সংখ্যা = সব ব্যাচের পিসের যোগ। টাকা = প্রতি ব্যাচের (পিস × সেই ব্যাচের ক্রয় হার)।
+      সারি ক্লিক = কোন ব্যাচ থেকে এসেছে। <strong>বহু-হার</strong> = একই পণ্যে একাধিক ক্রয় দরের মাল আছে।
+    </p>
+    <div class="grid grid-3" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">মোট SKU</div><div class="kpi-value" id="sku-n"></div></div>
+      <div class="kpi"><div class="kpi-label">খোলা ব্যাচ</div><div class="kpi-value" id="batch-n"></div></div>
+      <div class="kpi"><div class="kpi-label">মোট স্টক মূল্য</div><div class="kpi-value" id="val-n"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h2>বর্তমান স্টক (ব্যাচভিত্তিক)</h2>
+        <a class="btn btn-ghost btn-sm" href="purchase-receive.html">+ ক্রয় গ্রহণ</a>
+      </div>
+      <div class="scroll-x">
+        <table class="data" id="stock-table"></table>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px" id="fifo-demo">
+      <div class="panel-head"><h2>FIFO ক্রয়খরচ — উদাহরণ</h2></div>
+      <p class="muted" style="margin-top:0">লোড শিটে ৫০ ইউনিট <strong>Rso.500ml</strong> ডেলিভারি হলে পুরনো ব্যাচ আগে খরচ হবে:</p>
+      <div id="fifo-out"></div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    const openSet = new Set();
+
+    function render() {
+      const ps = SAMPLE.products;
+      const totalVal = ps.reduce((s, p) => s + stockValue(p.id), 0);
+      document.getElementById("sku-n").textContent = ps.length;
+      document.getElementById("batch-n").textContent = (SAMPLE.batches || []).filter(b => b.qty > 0).length;
+      document.getElementById("val-n").textContent = "৳" + fmt(totalVal);
+
+      let html = `<thead><tr>
+        <th></th>
+        <th>পণ্য</th><th>কোম্পানি</th>
+        <th class="num">স্টক (ইউনিট)</th>
+        <th class="num">ব্যাচ</th>
+        <th class="num">গড় ক্রয়মূল্য</th>
+        <th class="num">মূল্য</th>
+        <th>অবস্থা</th>
+      </tr></thead><tbody>`;
+
+      ps.forEach(p => {
+        const qty = stockQty(p.id);
+        const n = batchCount(p.id);
+        const val = stockValue(p.id);
+        const open = openSet.has(p.id);
+        const st = qty === 0 ? '<span class="tag tag-danger">শূন্য</span>'
+          : qty < 50 ? '<span class="tag tag-warn">কম</span>'
+          : '<span class="tag">পর্যাপ্ত</span>';
+        const multi = n > 1 ? '<span class="tag tag-warn">বহু-হার</span> ' : "";
+
+        html += `<tr class="product-row${open ? " open" : ""}" data-id="${p.id}" id="p${p.id}">
+          <td>${n ? (open ? "▾" : "▸") : "·"}</td>
+          <td><strong>${p.name}</strong> ${multi}</td>
+          <td>${p.company}</td>
+          <td class="num">${fmt(qty)}</td>
+          <td class="num">${n || "—"}</td>
+          <td class="num">${n ? fmt(avgCost(p.id)) : "—"}</td>
+          <td class="num">${fmt(val)}</td>
+          <td>${st}</td>
+        </tr>`;
+
+        if (open && n) {
+          batchesOf(p.id).forEach(b => {
+            html += `<tr class="batch-row">
+              <td></td>
+              <td class="batch-indent" colspan="2">
+                <strong>${b.batchNo}</strong>
+                <span class="muted"> · ${b.receiveDate} · ${b.supplier || ""}</span>
+              </td>
+              <td class="num">${fmt(b.qty)}</td>
+              <td class="num muted">ক্রয় হার</td>
+              <td class="num">${fmt(b.rate)}</td>
+              <td class="num">${fmt(b.qty * b.rate)}</td>
+              <td><span class="tag-muted tag">FIFO ক্রম</span></td>
+            </tr>`;
+          });
+        }
+      });
+
+      html += "</tbody>";
+      document.getElementById("stock-table").innerHTML = html;
+
+      document.querySelectorAll("tr.product-row").forEach(tr => {
+        tr.addEventListener("click", () => {
+          const id = +tr.dataset.id;
+          if (!batchCount(id)) {
+            toast("এই SKU-তে খোলা ব্যাচ নেই — ক্রয় গ্রহণ করুন");
+            return;
+          }
+          if (openSet.has(id)) openSet.delete(id);
+          else openSet.add(id);
+          render();
+        });
+      });
+    }
+
+    mountApp({
+      page: "stock",
+      title: "স্টক (ব্যাচভিত্তিক)",
+      onReady() {
+        openSet.add(1);
+        openSet.add(11);
+        const hash = location.hash.replace("#p", "");
+        if (hash) openSet.add(+hash);
+        render();
+
+        const r = fifoCogs(1, 50);
+        document.getElementById("fifo-out").innerHTML = `
+          <table class="data">
+            <thead><tr><th>ব্যাচ</th><th class="num">ব্যবহৃত ইউনিট</th><th class="num">ক্রয় হার</th><th class="num">খরচ</th></tr></thead>
+            <tbody>${r.used.map(u => `
+              <tr>
+                <td>${u.batchNo}</td>
+                <td class="num">${fmt(u.take)}</td>
+                <td class="num">${fmt(u.rate)}</td>
+                <td class="num">${fmt(u.take * u.rate)}</td>
+              </tr>`).join("")}
+              <tr>
+                <td colspan="3"><strong>মোট ক্রয়খরচ (৫০ ইউনিট)</strong></td>
+                <td class="num"><strong>৳${fmt(r.cost)}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="muted" style="margin:10px 0 0">
+            কেবল পুরনো হার ৯২.৫ হলে: ৳${fmt(50 * 92.5)} ·
+            কেবল নতুন হার ৯৫.২ হলে: ৳${fmt(50 * 95.2)} —
+            FIFO সঠিক মিশ্রণ হিসাব করে।
+          </p>`;
+
+        if (hash) {
+          setTimeout(() => {
+            const el = document.getElementById("p" + hash);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 100);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

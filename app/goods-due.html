@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>পণ্য Due / Balance — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      শীটের দিন ব্লক: <strong>Due Quantity</strong> = আসবে/পাওয়া বাকি <em>মালের qty</em>।
+      <strong>Balance Quantity</strong> = চলমান বাকি (আগের Balance + Due − Receive)।
+      <strong>Receive</strong> = মাল এলো (স্টক বাড়ে, Balance কমে) — শীটে মাঝে মাঝেই ভরা, প্রতিদিন নয়।
+      এটি <em>টাকার Due</em> (<a href="daily-cash.html">দিনের টাকা সেটেল</a>) নয়।
+    </p>
+    <div class="grid grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>সাম্প্রতিক Due / Receive</h2></div>
+        <div class="scroll-x">
+          <table class="data" id="ev"></table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>হালকা এন্ট্রি (ডেমো)</h2></div>
+        <div class="field"><label>তারিখ</label><input type="date" value="2026-01-05" /></div>
+        <div class="field"><label>পণ্য</label>
+          <select id="pid"></select>
+        </div>
+        <div class="field"><label>Due Quantity (আসবে)</label><input type="number" id="due" value="0" /></div>
+        <div class="field"><label>Receive (এসেছে)</label><input type="number" id="recv" value="720" /></div>
+        <div class="field"><label>Rate (Due price ≈ PurchUP)</label><input type="number" id="rate" step="0.01" /></div>
+        <button class="btn btn-primary" data-toast="Due/Receive সংরক্ষণ (ডেমো)">সংরক্ষণ</button>
+        <p class="muted" style="margin-top:12px">আলাদা ভারী “ক্রয় গ্রহণ” মডিউল দরকার নেই — শীটে এটাই Receive।</p>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "goods-due",
+      title: "পণ্য Due Quantity / Balance",
+      onReady() {
+        document.getElementById("ev").innerHTML = `
+          <thead>
+            <tr>
+              <th>তারিখ</th><th>পণ্য</th>
+              <th class="num">Due qty</th>
+              <th class="num">Receive</th>
+              <th>নোট</th>
+            </tr>
+          </thead>
+          <tbody>${SAMPLE.goodsDueEvents.map((e) => {
+            const p = productById(e.productId);
+            return `<tr>
+              <td>${e.date}</td>
+              <td>${p ? p.name : e.productId}</td>
+              <td class="num">${fmt(e.dueQty)}</td>
+              <td class="num">${fmt(e.recvQty)}</td>
+              <td>${e.note}</td>
+            </tr>`;
+          }).join("")}</tbody>`;
+
+        const sel = document.getElementById("pid");
+        sel.innerHTML = SAMPLE.products.slice(0, 12).map((p) =>
+          `<option value="${p.id}">${p.name}</option>`
+        ).join("");
+        function syncRate() {
+          const p = productById(+sel.value);
+          document.getElementById("rate").value = p ? p.buy : 0;
+        }
+        sel.addEventListener("change", syncRate);
+        syncRate();
+      }
+    });
+  </script>
+</body>
+</html>

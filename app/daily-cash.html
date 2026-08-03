@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>দিনের টাকা সেটেল — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    tr.day-row { cursor: pointer; }
+    tr.day-row:hover td { background: #f0f7f4; }
+    tr.day-row.is-active td { background: #e2f2eb; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+    .net-box {
+      display: inline-block;
+      padding: 10px 16px;
+      background: #e8f5ee;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      margin-top: 12px;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .sales-banner {
+      background: #eef6fb;
+      border: 1px solid #b8d4e8;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      font-size: 0.92rem;
+    }
+    .sales-banner strong { color: #0a5; }
+    input[data-k="sales"].from-load {
+      background: #f4faf7;
+      border-color: #8cba9e;
+    }
+    .tag-load {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: #1a7a4c;
+      color: #fff;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      <strong>বিক্রয় ৳</strong> ← <a href="load-samari.html">লোড শিট</a> সেভ (সব SR যোগ)।
+      Due / Credit / কমিশন / sort / bank = হাতে। নেট Receive অটো।
+    </p>
+    <div class="grid grid-4" id="sum" style="margin-bottom:16px"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>মাসের দৈনিক হিসাব</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a class="btn btn-ghost btn-sm" href="load-samari.html">লোড শিট</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-pull-all">সব দিন লোড থেকে রিফ্রেশ</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-add-day">+ নতুন দিন</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-reset">নমুনা রিসেট</button>
+        </div>
+      </div>
+      <div class="scroll-x">
+        <table class="data" id="tbl"></table>
+      </div>
+      <p class="muted" style="margin-top:12px">
+        সূত্র: <code>(বিক্রি + Credit + Over + Manager) − (Due + কমিশন + Operating + Sort…)</code>
+      </p>
+    </div>
+
+    <div class="panel" style="margin-top:16px" id="editor">
+      <div class="panel-head">
+        <h2 id="editor-title">দিন নির্বাচন করুন</h2>
+      </div>
+      <p class="muted" id="editor-hint">টেবিল থেকে সারি ক্লিক করুন।</p>
+
+      <div id="editor-body" hidden>
+        <div id="sales-banner" class="sales-banner"></div>
+
+        <div class="field-grid" style="margin-bottom:12px">
+          <div class="field" style="margin:0">
+            <label>দিন নম্বর</label>
+            <input type="number" id="f-day" min="1" max="31" />
+          </div>
+          <div class="field" style="margin:0">
+            <label>তারিখ</label>
+            <input type="date" id="f-date" />
+          </div>
+        </div>
+
+        <h3 style="font-size:0.95rem;margin:16px 0 8px">
+          মূল টাকা
+          <span id="sales-source-tag"></span>
+        </h3>
+        <div class="field-grid" id="fields-main"></div>
+        <label style="display:flex;align-items:center;gap:8px;margin:10px 0;font-size:0.9rem">
+          <input type="checkbox" id="f-manual-sales" />
+          বিক্রয় হাতে ওভাররাইড (লোড লিংক খুলবে)
+        </label>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-pull-one">এই দিন লোড থেকে আনুন</button>
+
+        <h3 style="font-size:0.95rem;margin:16px 0 8px">SR short / over · খরচ (ম্যানুয়াল)</h3>
+        <div class="field-grid" id="fields-sr"></div>
+
+        <div class="net-box">নেট Total Receive Amount: ৳ <strong id="live-net">0</strong></div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="btn-save">সেভ</button>
+          <button type="button" class="btn btn-ghost" id="btn-clear-day">দিন খালি করুন</button>
+          <button type="button" class="btn btn-ghost" id="btn-delete" style="color:#a33">সারি মুছুন</button>
+          <span class="muted" id="save-status"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    const SEED = JSON.parse(JSON.stringify(SAMPLE.dailyCash));
+
+    const MONEY_FIELDS = [
+      { k: "sales", lab: "বিক্রয় ৳", group: "main" },
+      { k: "due", lab: "Due ৳ (ধার)", group: "main" },
+      { k: "credit", lab: "Credit ৳ (আদায়)", group: "main" },
+      { k: "commission", lab: "কমিশন", group: "main" },
+      { k: "operating", lab: "Operating", group: "main" },
+      { k: "banking", lab: "Banking", group: "main" },
+      { k: "monirSort", lab: "মনির Sort", group: "sr" },
+      { k: "monirOver", lab: "মনির Over", group: "sr" },
+      { k: "arifSort", lab: "আরিফ Sort", group: "sr" },
+      { k: "arifOver", lab: "আরিফ Over", group: "sr" },
+      { k: "manikSort", lab: "মানিক Sort", group: "sr" },
+      { k: "manikOver", lab: "মানিক Over", group: "sr" },
+      { k: "santoSort", lab: "সন্তো Sort", group: "sr" },
+      { k: "manager", lab: "Manager", group: "sr" }
+    ];
+
+    function emptyDay(day, date) {
+      return PustiStore.emptyCashDay(day, date);
+    }
+
+    function loadDays() {
+      const stored = PustiStore.getCashDays();
+      if (stored && stored.length) {
+        SAMPLE.dailyCash = stored;
+      } else {
+        SAMPLE.dailyCash = JSON.parse(JSON.stringify(SEED));
+        PustiStore.setCashDays(SAMPLE.dailyCash);
+      }
+      return SAMPLE.dailyCash;
+    }
+
+    function persist() {
+      PustiStore.setCashDays(SAMPLE.dailyCash);
+    }
+
+    function sortDays() {
+      SAMPLE.dailyCash.sort((a, b) => a.day - b.day || (a.date < b.date ? -1 : 1));
+    }
+
+    let selectedIndex = 0;
+    let draft = null;
+
+    function renderKpis() {
+      const days = SAMPLE.dailyCash;
+      const totSales = days.reduce((s, d) => s + (Number(d.sales) || 0), 0);
+      const totNet = days.reduce((s, d) => s + netReceiveAmount(d), 0);
+      const totDue = days.reduce((s, d) => s + (Number(d.due) || 0), 0);
+      const totCredit = days.reduce((s, d) => s + (Number(d.credit) || 0), 0);
+      document.getElementById("sum").innerHTML = [
+        ["মোট বিক্রয়", totSales, "লোড + ওভাররাইড"],
+        ["মোট নেট Receive", totNet, ""],
+        ["টাকা Due", totDue, ""],
+        ["Credit আদায়", totCredit, ""]
+      ].map(([l, v, h]) => `
+        <div class="kpi">
+          <div class="kpi-label">${l}</div>
+          <div class="kpi-value">${fmt(v)}</div>
+          <div class="kpi-hint">${h}</div>
+        </div>`).join("");
+    }
+
+    function salesSrcLabel(d) {
+      const ls = PustiStore.loadSummary(d.date);
+      if (ls.loads.length) return "লোড";
+      if (d.salesFromLoad) return "লোড";
+      return "হাতে / নমুনা";
+    }
+
+    function renderTable() {
+      const days = SAMPLE.dailyCash;
+      document.getElementById("tbl").innerHTML = `
+        <thead>
+          <tr>
+            <th></th>
+            <th>দিন</th><th>তারিখ</th>
+            <th class="num">বিক্রয়</th>
+            <th>উৎস</th>
+            <th class="num">Due</th>
+            <th class="num">Credit</th>
+            <th class="num">কমিশন</th>
+            <th class="num">Operating</th>
+            <th class="num">Banking</th>
+            <th class="num">নেট Receive</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${days.map((d, i) => {
+          const net = netReceiveAmount(d);
+          const active = i === selectedIndex ? " is-active" : "";
+          const src = salesSrcLabel(d);
+          return `<tr class="day-row${active}" data-i="${i}">
+            <td class="muted">${i === selectedIndex ? "▶" : ""}</td>
+            <td>${d.day}</td>
+            <td>${d.date}</td>
+            <td class="num">${fmt(d.sales)}</td>
+            <td>${src === "লোড" ? '<span class="tag-load">লোড</span>' : '<span class="muted">ম্যানুয়াল</span>'}</td>
+            <td class="num">${fmt(d.due)}</td>
+            <td class="num">${fmt(d.credit)}</td>
+            <td class="num">${fmt(d.commission)}</td>
+            <td class="num">${fmt(d.operating)}</td>
+            <td class="num">${fmt(d.banking)}</td>
+            <td class="num"><strong>${fmt(net)}</strong></td>
+            <td><button type="button" class="btn btn-ghost btn-sm btn-edit" data-i="${i}">এডিট</button></td>
+          </tr>`;
+        }).join("")}</tbody>`;
+
+      document.querySelectorAll(".day-row").forEach((tr) => {
+        tr.addEventListener("click", (e) => {
+          if (e.target.closest("button")) return;
+          selectDay(+tr.dataset.i);
+        });
+      });
+      document.querySelectorAll(".btn-edit").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          selectDay(+btn.dataset.i);
+          document.getElementById("editor").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
+    }
+
+    function buildFieldInputs() {
+      const main = document.getElementById("fields-main");
+      const sr = document.getElementById("fields-sr");
+      main.innerHTML = "";
+      sr.innerHTML = "";
+      MONEY_FIELDS.forEach(({ k, lab, group }) => {
+        const wrap = document.createElement("div");
+        wrap.className = "field";
+        wrap.style.margin = "0";
+        wrap.innerHTML = `
+          <label>${lab}</label>
+          <input type="number" data-k="${k}" step="0.01" min="0" />`;
+        (group === "main" ? main : sr).appendChild(wrap);
+      });
+      document.querySelectorAll("#editor-body input[data-k]").forEach((el) => {
+        el.addEventListener("input", onDraftChange);
+      });
+      document.getElementById("f-day").addEventListener("input", onDraftChange);
+      document.getElementById("f-date").addEventListener("change", () => {
+        onDraftChange();
+        updateSalesUi();
+      });
+      document.getElementById("f-manual-sales").addEventListener("change", updateSalesUi);
+    }
+
+    function updateSalesUi() {
+      if (!draft) return;
+      const date = document.getElementById("f-date").value || draft.date;
+      const sum = PustiStore.loadSummary(date);
+      const manual = document.getElementById("f-manual-sales").checked;
+      const salesInput = document.querySelector('#editor-body [data-k="sales"]');
+      const banner = document.getElementById("sales-banner");
+      const tag = document.getElementById("sales-source-tag");
+
+      if (sum.loads.length) {
+        banner.innerHTML = `
+          লোড শিট থেকে: <strong>৳${fmt(sum.sales)}</strong>
+          · ডেলিভারি ${fmt(sum.deliveryPcs)} পিস
+          · SR: ${sum.srs.join(", ")}
+          · মুনাফা তথ্য ৳${fmt(sum.profit)}
+          ${manual ? " · <em>হাতে ওভাররাইড চালু</em>" : " · বিক্রয় ক্ষেত্র লক (লোড থেকে)"}
+          · <a href="load-samari.html">লোড সম্পাদনা</a>`;
+        tag.innerHTML = manual
+          ? '<span class="muted">ম্যানুয়াল</span>'
+          : '<span class="tag-load">লোড শিট</span>';
+        if (!manual) {
+          salesInput.value = sum.sales;
+          salesInput.readOnly = true;
+          salesInput.classList.add("from-load");
+          draft.sales = sum.sales;
+          draft.salesFromLoad = true;
+          draft.loadProfit = sum.profit;
+          draft.loadDeliveryPcs = sum.deliveryPcs;
+        } else {
+          salesInput.readOnly = false;
+          salesInput.classList.remove("from-load");
+          draft.salesFromLoad = false;
+        }
+      } else {
+        banner.innerHTML = `
+          এই তারিখে <strong>লোড সেভ নেই</strong> —
+          <a href="load-samari.html">লোড শিট</a> থেকে সেভ করুন, অথবা বিক্রয় হাতে লিখুন।`;
+        tag.innerHTML = '<span class="muted">ম্যানুয়াল</span>';
+        salesInput.readOnly = false;
+        salesInput.classList.remove("from-load");
+        document.getElementById("f-manual-sales").checked = true;
+        draft.salesFromLoad = false;
+      }
+      updateLiveNet();
+    }
+
+    function fillForm() {
+      if (!draft) return;
+      document.getElementById("f-day").value = draft.day;
+      document.getElementById("f-date").value = draft.date;
+      MONEY_FIELDS.forEach(({ k }) => {
+        const el = document.querySelector(`#editor-body [data-k="${k}"]`);
+        if (el) el.value = draft[k] != null ? draft[k] : 0;
+      });
+      const sum = PustiStore.loadSummary(draft.date);
+      document.getElementById("f-manual-sales").checked =
+        !sum.loads.length || draft.salesFromLoad === false;
+      if (sum.loads.length && draft.salesFromLoad !== false) {
+        document.getElementById("f-manual-sales").checked = false;
+      }
+      document.getElementById("editor-title").textContent =
+        `দিন ${draft.day} এডিট · ${draft.date}`;
+      document.getElementById("editor-hint").textContent =
+        "বিক্রয় লোড থেকে · বাকি হাতে · সেভ";
+      document.getElementById("editor-body").hidden = false;
+      document.getElementById("save-status").textContent = "";
+      updateSalesUi();
+    }
+
+    function readFormToDraft() {
+      if (!draft) return;
+      draft.day = +document.getElementById("f-day").value || draft.day;
+      draft.date = document.getElementById("f-date").value || draft.date;
+      MONEY_FIELDS.forEach(({ k }) => {
+        const el = document.querySelector(`#editor-body [data-k="${k}"]`);
+        draft[k] = el ? (+el.value || 0) : 0;
+      });
+      const sum = PustiStore.loadSummary(draft.date);
+      const manual = document.getElementById("f-manual-sales").checked;
+      draft.salesFromLoad = !manual && sum.loads.length > 0;
+      if (draft.salesFromLoad) {
+        draft.sales = sum.sales;
+        draft.loadProfit = sum.profit;
+        draft.loadDeliveryPcs = sum.deliveryPcs;
+      }
+    }
+
+    function updateLiveNet() {
+      readFormToDraft();
+      document.getElementById("live-net").textContent = fmt(netReceiveAmount(draft));
+    }
+
+    function onDraftChange() {
+      updateLiveNet();
+      document.getElementById("save-status").textContent = "অসংরক্ষিত পরিবর্তন…";
+    }
+
+    function selectDay(i) {
+      if (i < 0 || i >= SAMPLE.dailyCash.length) return;
+      selectedIndex = i;
+      draft = JSON.parse(JSON.stringify(SAMPLE.dailyCash[i]));
+      fillForm();
+      renderTable();
+    }
+
+    function saveDay() {
+      if (!draft || selectedIndex < 0) {
+        toast("আগে একটি দিন বেছে নিন");
+        return;
+      }
+      readFormToDraft();
+      if (draft.day < 1 || draft.day > 31) {
+        toast("দিন ১–৩১ হতে হবে");
+        return;
+      }
+      const clash = SAMPLE.dailyCash.findIndex(
+        (d, i) => i !== selectedIndex && d.day === draft.day
+      );
+      if (clash >= 0) {
+        toast("এই দিন নম্বর ইতিমধ্যে আছে");
+        return;
+      }
+      SAMPLE.dailyCash[selectedIndex] = JSON.parse(JSON.stringify(draft));
+      sortDays();
+      selectedIndex = SAMPLE.dailyCash.findIndex((d) => d.day === draft.day && d.date === draft.date);
+      if (selectedIndex < 0) selectedIndex = 0;
+      persist();
+      renderKpis();
+      renderTable();
+      fillForm();
+      document.getElementById("save-status").textContent = "✓ সেভ (ট্যাব সেশন)";
+      toast("সেভ — বিক্রয় ৳" + fmt(draft.sales) + " · নেট ৳" + fmt(netReceiveAmount(draft)));
+    }
+
+    function clearDay() {
+      if (!draft) return;
+      const day = draft.day;
+      const date = draft.date;
+      draft = emptyDay(day, date);
+      document.getElementById("f-manual-sales").checked = true;
+      fillForm();
+      document.getElementById("save-status").textContent = "খালি — সেভ হয়নি";
+    }
+
+    function deleteDay() {
+      if (SAMPLE.dailyCash.length <= 1) {
+        toast("কমপক্ষে একটি সারি রাখুন");
+        return;
+      }
+      if (!confirm("এই দিনের সারি মুছে ফেলবেন?")) return;
+      SAMPLE.dailyCash.splice(selectedIndex, 1);
+      selectedIndex = Math.min(selectedIndex, SAMPLE.dailyCash.length - 1);
+      draft = JSON.parse(JSON.stringify(SAMPLE.dailyCash[selectedIndex]));
+      persist();
+      renderKpis();
+      renderTable();
+      fillForm();
+      toast("সারি মুছেছে");
+    }
+
+    function addDay() {
+      const used = new Set(SAMPLE.dailyCash.map((d) => d.day));
+      let day = 1;
+      while (used.has(day) && day <= 31) day++;
+      if (day > 31) {
+        toast("মাসে আর জায়গা নেই");
+        return;
+      }
+      const date = "2026-01-" + String(day).padStart(2, "0");
+      SAMPLE.dailyCash.push(emptyDay(day, date));
+      sortDays();
+      selectedIndex = SAMPLE.dailyCash.findIndex((d) => d.day === day);
+      draft = JSON.parse(JSON.stringify(SAMPLE.dailyCash[selectedIndex]));
+      persist();
+      renderKpis();
+      renderTable();
+      fillForm();
+      document.getElementById("editor").scrollIntoView({ behavior: "smooth" });
+      toast("নতুন দিন " + day);
+    }
+
+    function pullOneFromLoad() {
+      if (!draft) return;
+      const date = document.getElementById("f-date").value || draft.date;
+      const sum = PustiStore.loadSummary(date);
+      if (!sum.loads.length) {
+        toast("এই তারিখে লোড সেভ নেই — আগে লোড শিট সেভ করুন");
+        return;
+      }
+      document.getElementById("f-manual-sales").checked = false;
+      draft.sales = sum.sales;
+      draft.salesFromLoad = true;
+      draft.loadProfit = sum.profit;
+      draft.loadDeliveryPcs = sum.deliveryPcs;
+      updateSalesUi();
+      document.getElementById("save-status").textContent = "লোড থেকে আনা — এখন সেভ করুন";
+      toast("বিক্রয় ৳" + fmt(sum.sales) + " লোড থেকে");
+    }
+
+    function pullAllFromLoad() {
+      let n = 0;
+      SAMPLE.dailyCash.forEach((d) => {
+        const sum = PustiStore.loadSummary(d.date);
+        if (sum.loads.length) {
+          d.sales = sum.sales;
+          d.salesFromLoad = true;
+          d.loadProfit = sum.profit;
+          d.loadDeliveryPcs = sum.deliveryPcs;
+          n++;
+        }
+      });
+      persist();
+      renderKpis();
+      renderTable();
+      if (draft) {
+        draft = JSON.parse(JSON.stringify(SAMPLE.dailyCash[selectedIndex]));
+        fillForm();
+      }
+      toast(n ? n + " দিন লোড বিক্রয় দিয়ে আপডেট" : "কোনো তারিখে লোড সেভ নেই");
+    }
+
+    function resetSeed() {
+      if (!confirm("ক্যাশ + লোড সেশন ডাটা মুছে নমুনায় ফিরবে?")) return;
+      sessionStorage.removeItem(PustiStore.CASH_KEY);
+      sessionStorage.removeItem(PustiStore.LOAD_KEY);
+      SAMPLE.dailyCash = JSON.parse(JSON.stringify(SEED));
+      PustiStore.setCashDays(SAMPLE.dailyCash);
+      selectedIndex = 0;
+      draft = JSON.parse(JSON.stringify(SAMPLE.dailyCash[0]));
+      renderKpis();
+      renderTable();
+      fillForm();
+      toast("রিসেট সম্পন্ন");
+    }
+
+    mountApp({
+      page: "daily-cash",
+      title: "দিনের টাকা সেটেলমেন্ট",
+      onReady() {
+        loadDays();
+        buildFieldInputs();
+        if (!SAMPLE.dailyCash.length) {
+          SAMPLE.dailyCash.push(emptyDay(1, "2026-01-01"));
+          persist();
+        }
+        selectedIndex = 0;
+        draft = JSON.parse(JSON.stringify(SAMPLE.dailyCash[0]));
+        renderKpis();
+        renderTable();
+        fillForm();
+
+        document.getElementById("btn-save").addEventListener("click", saveDay);
+        document.getElementById("btn-clear-day").addEventListener("click", clearDay);
+        document.getElementById("btn-delete").addEventListener("click", deleteDay);
+        document.getElementById("btn-add-day").addEventListener("click", addDay);
+        document.getElementById("btn-reset").addEventListener("click", resetSeed);
+        document.getElementById("btn-pull-one").addEventListener("click", pullOneFromLoad);
+        document.getElementById("btn-pull-all").addEventListener("click", pullAllFromLoad);
+      }
+    });
+  </script>
+</body>
+</html>

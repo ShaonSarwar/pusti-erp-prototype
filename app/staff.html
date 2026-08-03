@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>কর্মী — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <span class="spacer"></span>
+      <button class="btn btn-primary" data-toast="কর্মী যোগ (ডেমো)">+ কর্মী</button>
+    </div>
+    <div class="panel">
+      <table class="data" id="tbl"></table>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "staff",
+      title: "কর্মী",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead><tr><th>নাম</th><th>রোল</th><th>মোবাইল</th><th></th></tr></thead>
+          <tbody>${SAMPLE.staff.map(s => `
+            <tr>
+              <td><strong>${s.name}</strong></td>
+              <td><span class="tag">${s.role}</span></td>
+              <td>${s.phone}</td>
+              <td><button class="btn btn-ghost btn-sm" data-toast="রোল সেট (ডেমো)">রোল</button></td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>সেটিংস — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="grid grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>প্রতিষ্ঠান</h2></div>
+        <div class="field"><label>নাম</label><input value="PUSTI ডিস্ট্রিবিউশন" /></div>
+        <div class="field"><label>ঠিকানা</label><input value="ঢাকা, বাংলাদেশ" /></div>
+        <div class="field"><label>আর্থিক বছর শুরু</label><input type="date" value="2026-01-01" /></div>
+        <button class="btn btn-primary" data-toast="সেটিংস সংরক্ষণ (ডেমো)">সংরক্ষণ</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>ভূমিকা ও অনুমতি</h2></div>
+        <table class="data">
+          <thead><tr><th>ভূমিকা</th><th>অধিকার</th></tr></thead>
+          <tbody>
+            <tr><td>এডমিন</td><td>সকল মডিউল</td></tr>
+            <tr><td>হিসাবরক্ষক</td><td>বিক্রয়, কালেকশন, ভাউচার, রিপোর্ট</td></tr>
+            <tr><td>গুদাম কর্মকর্তা</td><td>গুদামে মাল আসা, স্টক, লোড শিট</td></tr>
+            <tr><td>সেলস রিপ্রেজেন্টেটিভ (SR)</td><td>মোবাইল লোড, ফেরত, কালেকশন</td></tr>
+            <tr><td>শুধু দেখার অধিকার</td><td>রিপোর্ট (রিড-অনলি)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>mountApp({ page: "settings-roles", title: "সেটিংস / রোল" });</script>
+</body>
+</html>

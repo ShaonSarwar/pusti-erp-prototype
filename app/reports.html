@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>রিপোর্ট — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">শীট-ম্যাচ রিপোর্ট লিংক। প্রোডাকশনে PDF/Excel রপ্তানি থাকবে।</p>
+    <div class="grid grid-3">
+      <a class="panel" href="daily-cash.html" style="display:block">
+        <h2 style="margin:0 0 8px;font-size:1.05rem">দিনের টাকা / Receive</h2>
+        <p class="muted" style="margin:0">Due · Credit · কমিশন · নেট</p>
+      </a>
+      <a class="panel" href="product-summary.html" style="display:block">
+        <h2 style="margin:0 0 8px;font-size:1.05rem">পণ্য মাসিক সারাংশ</h2>
+        <p class="muted" style="margin:0">Sale · profit · due product Tk</p>
+      </a>
+      <a class="panel" href="pnl.html" style="display:block">
+        <h2 style="margin:0 0 8px;font-size:1.05rem">লাভ − খরচ</h2>
+        <p class="muted" style="margin:0">Gross − commission/ops/sort</p>
+      </a>
+      <a class="panel" href="stock.html" style="display:block">
+        <h2 style="margin:0 0 8px;font-size:1.05rem">স্টক</h2>
+        <p class="muted" style="margin:0">মজুদ ও মূল্য</p>
+      </a>
+      <a class="panel" href="goods-due.html" style="display:block">
+        <h2 style="margin:0 0 8px;font-size:1.05rem">পণ্য Due pipeline</h2>
+        <p class="muted" style="margin:0">Due qty · Receive</p>
+      </a>
+      <a class="panel" href="undelivery.html" style="display:block">
+        <h2 style="margin:0 0 8px;font-size:1.05rem">Undelevary</h2>
+        <p class="muted" style="margin:0">Sheet2 সীমিত SKU</p>
+      </a>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>mountApp({ page: "reports", title: "রিপোর্ট সেন্টার" });</script>
+</body>
+</html>

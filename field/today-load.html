@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>মোবাইল — আজকের লোড</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body style="background:#e8eee9">
+  <div class="field-frame">
+    <div class="field-top">
+      <div style="font-size:0.8rem;opacity:0.85">PUSTI ERP · মোবাইল</div>
+      <h1>আজকের লোড</h1>
+      <div style="margin-top:8px;font-size:0.9rem;opacity:0.9">মনির · রুট-ক · ২০২৬-০৩-১৫</div>
+      <div class="proto-badge" style="margin-top:10px">প্রোটোটাইপ — সংরক্ষিত হয় না</div>
+    </div>
+    <div class="field-body" id="list"></div>
+    <nav class="field-nav">
+      <a class="active" href="today-load.html">লোড</a>
+      <a href="field-return.html">ফেরত</a>
+      <a href="field-collection.html">কালেকশন</a>
+    </nav>
+  </div>
+  <p style="text-align:center;padding:12px"><a href="../app/dashboard.html" style="color:#0b6b52;font-weight:600">← অফিস ড্যাশবোর্ড</a></p>
+  <script src="../assets/sample-data.js"></script>
+  <script>
+    document.getElementById("list").innerHTML = SAMPLE.samariLines.map(l => {
+      const p = SAMPLE.products.find(x => x.id === l.id);
+      const tot = pcsTotal(l.carton, l.piece, p.carton);
+      return `<div class="field-card-line">
+        <strong>${p.name}</strong>
+        <div class="muted" style="font-size:0.85rem;margin:4px 0">${p.company} · কার্টন সাইজ ${p.carton}</div>
+        <div style="display:flex;justify-content:space-between;font-weight:600">
+          <span>${l.carton} কার্টন + ${l.piece} ইউনিট</span>
+          <span>${tot} মোট</span>
+        </div>
+      </div>`;
+    }).join("");
+  </script>
+</body>
+</html>

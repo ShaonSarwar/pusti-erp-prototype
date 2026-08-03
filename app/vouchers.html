@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ভাউচার — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <button class="btn btn-primary" data-toast="প্রাপ্তি ভাউচার (ডেমো)">+ প্রাপ্তি</button>
+      <button class="btn btn-ghost" data-toast="প্রদান ভাউচার (ডেমো)">+ প্রদান</button>
+      <button class="btn btn-ghost" data-toast="জার্নাল (ডেমো)">+ জার্নাল</button>
+    </div>
+    <div class="panel">
+      <table class="data" id="tbl"></table>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "vouchers",
+      title: "ভাউচার",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead><tr><th>নং</th><th>ধরন</th><th>তারিখ</th><th>বিবরণ</th><th class="num">টাকা</th></tr></thead>
+          <tbody>${SAMPLE.vouchers.map(v => `
+            <tr>
+              <td>${v.no}</td>
+              <td><span class="tag">${v.type}</span></td>
+              <td>${v.date}</td><td>${v.narr}</td>
+              <td class="num">${fmt(v.amount)}</td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

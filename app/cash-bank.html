@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>নগদ ও ব্যাংক — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      শীট <strong>Banking Amount</strong> দিনের সেটেল সারিতে থাকে।
+      নীচের ব্যালেন্স = নগদ/ব্যাংক সারাংশ; দৈনিক এন্ট্রি → <a href="daily-cash.html">দিনের টাকা</a>।
+    </p>
+    <div class="grid grid-3" style="margin-bottom:16px">
+      <div class="kpi"><div class="kpi-label">নগদ</div><div class="kpi-value" id="c"></div></div>
+      <div class="kpi"><div class="kpi-label">ব্যাংক</div><div class="kpi-value" id="b"></div></div>
+      <div class="kpi"><div class="kpi-label">মোবাইল</div><div class="kpi-value" id="m"></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>শীট থেকে Banking (নমুনা দিন)</h2></div>
+      <table class="data" id="tbl"></table>
+      <div class="stat-row" id="total" style="margin-top:12px"></div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "cash-bank",
+      title: "নগদ ও ব্যাংক",
+      onReady() {
+        const cb = SAMPLE.cashBank;
+        document.getElementById("c").textContent = "৳" + fmt(cb.cash);
+        document.getElementById("b").textContent = "৳" + fmt(cb.bank);
+        document.getElementById("m").textContent = "৳" + fmt(cb.mfs);
+        document.getElementById("total").innerHTML =
+          `<div><span>তরল মোট</span> ৳${fmt(cb.cash + cb.bank + cb.mfs)}</div>`;
+        const banked = SAMPLE.dailyCash.filter((d) => d.banking);
+        document.getElementById("tbl").innerHTML = `
+          <thead><tr><th>তারিখ</th><th class="num">Banking Amount</th><th class="num">ঐ দিন নেট Receive</th></tr></thead>
+          <tbody>${banked.length ? banked.map((d) => `
+            <tr>
+              <td>${d.date}</td>
+              <td class="num">${fmt(d.banking)}</td>
+              <td class="num">${fmt(netReceiveAmount(d))}</td>
+            </tr>`).join("") : `<tr><td colspan="3" class="muted">এই নমুনায় banking খালি দিনও আছে</td></tr>`}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

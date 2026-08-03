@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>সরবরাহকারী — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <span class="spacer"></span>
+      <button class="btn btn-primary" data-toast="সরবরাহকারী যোগ (ডেমো)">+ সরবরাহকারী</button>
+    </div>
+    <div class="panel">
+      <table class="data" id="tbl"></table>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "suppliers",
+      title: "সরবরাহকারী",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead><tr><th>নাম</th><th>ফোন</th><th class="num">প্রদেয় (৳)</th><th></th></tr></thead>
+          <tbody>${SAMPLE.suppliers.map(s => `
+            <tr>
+              <td><strong>${s.name}</strong></td>
+              <td>${s.phone}</td>
+              <td class="num">${fmt(s.payable)}</td>
+              <td><button class="btn btn-ghost btn-sm" data-toast="পেমেন্ট (ডেমো)">পরিশোধ</button></td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

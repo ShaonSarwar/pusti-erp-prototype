@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>পণ্য মাসিক সারাংশ — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      শীটের ডানপাশ <strong>UO–UY</strong>: প্রতি <em>পণ্য</em> সারি — পুরো মাসের যোগফল
+      (Receive Tk, Sale, Profit, Due product amount, stock)। দৈনিক টাকা সেটেল নয়।
+    </p>
+    <div class="panel">
+      <div class="scroll-x">
+        <table class="data" id="tbl"></table>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "product-summary",
+      title: "পণ্য মাসিক সারাংশ",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead>
+            <tr>
+              <th>পণ্য</th>
+              <th class="num">Receive Tk</th>
+              <th class="num">Total sale</th>
+              <th class="num">Cost (sale×buy)</th>
+              <th class="num">Profit</th>
+              <th class="num">Due product Tk</th>
+              <th class="num">Bal due Tk</th>
+              <th class="num">Stock pcs</th>
+              <th class="num">Stock carton</th>
+            </tr>
+          </thead>
+          <tbody>${SAMPLE.productMonthSummary.map((r) => {
+            const p = productById(r.productId);
+            const cart = p && p.carton ? r.stock / p.carton : 0;
+            return `<tr>
+              <td>${p ? p.name : r.productId}</td>
+              <td class="num">${fmt(r.receiveTk)}</td>
+              <td class="num">${fmt(r.saleTk)}</td>
+              <td class="num">${fmt(r.cogsTk)}</td>
+              <td class="num">${fmt(r.profit)}</td>
+              <td class="num">${fmt(r.dueProductAmt)}</td>
+              <td class="num">${fmt(r.balDueAmt)}</td>
+              <td class="num">${fmt(r.stock)}</td>
+              <td class="num">${fmt(cart)}</td>
+            </tr>`;
+          }).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>লোড শিট — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note" style="margin-top:0">
+      সেভ করলে এই দিনের <strong>বিক্রয় ৳</strong> স্বয়ংক্রিয়ভাবে
+      <a href="daily-cash.html">দিনের টাকা সেটেল</a>-এ যায় (সব SR-এর যোগ)।
+      Due / Credit / কমিশন সেখানে আলাদা এন্ট্রি।
+    </p>
+    <div class="panel">
+      <div class="inline-form">
+        <div class="field" style="margin:0">
+          <label>তারিখ</label>
+          <input type="date" id="load-date" value="2026-01-07" />
+        </div>
+        <div class="field" style="margin:0">
+          <label>সেলসম্যান / SR</label>
+          <select id="staff">
+            <option>মনির</option>
+            <option>মনিরুজ্জা</option>
+            <option>আরিফ</option>
+            <option>মানিক (DSR)</option>
+            <option>সন্তো (DRI)</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0">
+          <label>রুট + ভ্যান</label>
+          <select id="route">
+            <option>রুট-ক · ঢাকা-মেট্রো-১১</option>
+            <option>রুট-খ · ঢাকা-মেট্রো-২২</option>
+            <option>রুট-গ · ঢাকা-মেট্রো-৩৩</option>
+          </select>
+        </div>
+        <div class="field" style="margin:0">
+          <label>অবস্থা</label>
+          <select id="status">
+            <option>খসড়া</option>
+            <option selected>নিশ্চিত</option>
+            <option>সম্পন্ন</option>
+          </select>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button type="button" class="btn btn-primary" id="btn-save">সংরক্ষণ → টাকা সেটেল</button>
+        <button type="button" class="btn btn-ghost" data-toast="প্রিন্ট প্রিভিউ (ডেমো)">প্রিন্ট</button>
+        <a class="btn btn-ghost" href="daily-cash.html">দিনের টাকা খুলুন</a>
+        <span class="spacer"></span>
+        <span class="muted" id="totals-label"></span>
+      </div>
+      <p class="muted" id="push-status" style="margin:0 0 12px"></p>
+      <div class="scroll-x">
+        <table class="data" id="samari-table">
+          <thead>
+            <tr>
+              <th>পণ্য</th>
+              <th>কোম্পানি</th>
+              <th class="num">কার্টন সাইজ</th>
+              <th class="num">ইস্যু কার্টন</th>
+              <th class="num">ইস্যু পিস</th>
+              <th class="num">ইস্যু মোট</th>
+              <th class="num">ফেরত কার্টন</th>
+              <th class="num">ফেরত পিস</th>
+              <th class="num">ফেরত মোট</th>
+              <th class="num">ডেলিভারি</th>
+              <th class="num">বিক্রয় হার</th>
+              <th class="num">বিক্রয় টাকা</th>
+              <th class="num">স্টক</th>
+            </tr>
+          </thead>
+          <tbody id="samari-body"></tbody>
+        </table>
+      </div>
+      <div class="stat-row" id="day-sum"></div>
+      <div class="panel" style="margin-top:16px;box-shadow:none;border:1px solid #e0e0e0" id="day-loads-panel">
+        <div class="panel-head"><h2 style="font-size:1rem">এই তারিখে সেভ করা লোড</h2></div>
+        <div id="day-loads" class="muted">এখনো নেই</div>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    let lastTotals = { sales: 0, deliveryPcs: 0, profit: 0, issuePcs: 0, returnPcs: 0 };
+
+    function productMap() {
+      const m = {};
+      SAMPLE.products.forEach((p) => (m[p.id] = p));
+      return m;
+    }
+
+    function recompute() {
+      const map = productMap();
+      let samari = 0, firot = 0, sales = 0, profit = 0;
+      document.querySelectorAll("#samari-body tr").forEach((tr) => {
+        const id = +tr.dataset.id;
+        const p = map[id];
+        const c = +tr.querySelector(".sc").value || 0;
+        const pi = +tr.querySelector(".sp").value || 0;
+        const rc = +tr.querySelector(".rc").value || 0;
+        const rp = +tr.querySelector(".rp").value || 0;
+        const sTot = pcsTotal(c, pi, p.carton);
+        const rTot = pcsTotal(rc, rp, p.carton);
+        const del = sTot - rTot;
+        const sale = del * p.sell;
+        const cost = fifoCogs(id, del).cost;
+        tr.querySelector(".st").textContent = fmt(sTot);
+        tr.querySelector(".rt").textContent = fmt(rTot);
+        tr.querySelector(".dl").textContent = fmt(del);
+        tr.querySelector(".sv").textContent = fmt(sale);
+        samari += sTot;
+        firot += rTot;
+        sales += sale;
+        profit += sale - cost;
+      });
+      lastTotals = {
+        sales,
+        deliveryPcs: samari - firot,
+        profit,
+        issuePcs: samari,
+        returnPcs: firot
+      };
+      document.getElementById("day-sum").innerHTML = `
+        <div><span>ইস্যু মোট</span> ${fmt(samari)} পিস</div>
+        <div><span>ফেরত</span> ${fmt(firot)} পিস</div>
+        <div><span>ডেলিভারি</span> ${fmt(samari - firot)} পিস</div>
+        <div><span>বিক্রয় → সেটেল</span> ৳${fmt(sales)}</div>
+        <div><span>মুনাফা (তথ্য)</span> ৳${fmt(profit)}</div>`;
+      document.getElementById("totals-label").textContent =
+        `ডেলিভারি: ${fmt(samari - firot)} · বিক্রয় ৳${fmt(sales)}`;
+    }
+
+    function refreshDayLoads() {
+      const date = document.getElementById("load-date").value;
+      const sum = PustiStore.loadSummary(date);
+      const el = document.getElementById("day-loads");
+      if (!sum.loads.length) {
+        el.innerHTML = `<span class="muted">এই তারিখে এখনো লোড সেভ হয়নি।</span>`;
+        return;
+      }
+      el.innerHTML = `
+        <table class="data">
+          <thead><tr><th>SR</th><th>রুট</th><th class="num">ডেলিভারি</th><th class="num">বিক্রয় ৳</th></tr></thead>
+          <tbody>${sum.loads.map((L) => `
+            <tr>
+              <td>${L.sr}</td>
+              <td>${L.route || "—"}</td>
+              <td class="num">${fmt(L.deliveryPcs)}</td>
+              <td class="num">${fmt(L.sales)}</td>
+            </tr>`).join("")}
+            <tr>
+              <td colspan="2"><strong>দিনের মোট (টাকা সেটেল-এ যায়)</strong></td>
+              <td class="num"><strong>${fmt(sum.deliveryPcs)}</strong></td>
+              <td class="num"><strong>${fmt(sum.sales)}</strong></td>
+            </tr>
+          </tbody>
+        </table>`;
+    }
+
+    function saveLoad() {
+      recompute();
+      const date = document.getElementById("load-date").value;
+      const sr = document.getElementById("staff").value;
+      const route = document.getElementById("route").value;
+      const status = document.getElementById("status").value;
+      if (status === "খসড়া") {
+        toast("খসড়া — টাকা সেটেলে পাঠানো হয়নি। অবস্থা ‘নিশ্চিত’ করুন");
+        return;
+      }
+      if (lastTotals.sales <= 0 && lastTotals.deliveryPcs <= 0) {
+        toast("লাইনে ডেলিভারি/বিক্রয় নেই");
+        return;
+      }
+      const sum = PustiStore.saveLoadSheet({
+        date,
+        sr,
+        route,
+        sales: lastTotals.sales,
+        deliveryPcs: lastTotals.deliveryPcs,
+        profit: lastTotals.profit,
+        issuePcs: lastTotals.issuePcs,
+        returnPcs: lastTotals.returnPcs
+      });
+      refreshDayLoads();
+      document.getElementById("push-status").innerHTML =
+        `✓ সেভ · দিন <strong>${date}</strong> মোট বিক্রয় ৳<strong>${fmt(sum.sales)}</strong>
+         (${sum.srs.join(", ")}) →
+         <a href="daily-cash.html">টাকা সেটেল</a> আপডেট হয়েছে`;
+      toast("লোড সেভ — বিক্রয় ৳" + fmt(sum.sales) + " সেটেলে গেছে");
+    }
+
+    mountApp({
+      page: "load-samari",
+      title: "লোড শিট",
+      onReady() {
+        const lines = SAMPLE.samariLines;
+        const ids = new Set(lines.map((l) => l.id));
+        const body = document.getElementById("samari-body");
+        body.innerHTML = SAMPLE.products
+          .filter((p) => ids.has(p.id) || stockQty(p.id) > 0)
+          .slice(0, 20)
+          .map((p) => {
+            const line = lines.find((l) => l.id === p.id) || {
+              carton: 0, piece: 0, retC: 0, retP: 0
+            };
+            return `<tr data-id="${p.id}">
+            <td><strong>${p.name}</strong></td>
+            <td><span class="tag">${p.company}</span></td>
+            <td class="num">${p.carton}</td>
+            <td class="num"><input class="cell sc" type="number" min="0" value="${line.carton}" /></td>
+            <td class="num"><input class="cell sp" type="number" min="0" value="${line.piece}" /></td>
+            <td class="num st">0</td>
+            <td class="num"><input class="cell rc" type="number" min="0" value="${line.retC}" /></td>
+            <td class="num"><input class="cell rp" type="number" min="0" value="${line.retP}" /></td>
+            <td class="num rt">0</td>
+            <td class="num dl">0</td>
+            <td class="num">${fmt(p.sell)}</td>
+            <td class="num sv">0</td>
+            <td class="num">${fmt(stockQty(p.id))}</td>
+          </tr>`;
+          })
+          .join("");
+        body.querySelectorAll("input").forEach((inp) => inp.addEventListener("input", recompute));
+        document.getElementById("load-date").addEventListener("change", refreshDayLoads);
+        document.getElementById("btn-save").addEventListener("click", saveLoad);
+        recompute();
+        refreshDayLoads();
+      }
+    });
+  </script>
+</body>
+</html>

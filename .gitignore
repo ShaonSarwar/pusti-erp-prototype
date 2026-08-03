@@ -1,0 +1,10 @@
+# local tooling
+.git/
+.DS_Store
+Thumbs.db
+*.log
+__pycache__/
+_tmp*
+
+# not needed for pages
+node_modules/

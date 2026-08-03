@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>পণ্য — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      <strong>পণ্য = SKU মাস্টার</strong>: নাম, কার্টন সাইজ (শীট সূত্র), বিক্রয়/ক্রয় rate।
+      কোম্পানি ম্যাপ ডেমো। স্টক = opening/Receive থেকে।
+      মাল আসা ঐচ্ছিক → <a href="goods-due.html">পণ্য Due/Receive</a> বা
+      <a href="purchase-receive.html">মাল আসা</a>।
+    </p>
+    <div class="toolbar">
+      <input class="input" placeholder="পণ্য খুঁজুন…" id="q" style="min-width:220px" />
+      <select class="select" id="co-filter"><option value="">সকল কোম্পানি</option></select>
+      <span class="spacer"></span>
+      <button class="btn btn-primary" type="button" id="btn-add-product">+ নতুন SKU</button>
+      <a class="btn btn-ghost" href="goods-due.html">→ Due / Receive</a>
+    </div>
+    <div class="panel">
+      <div class="scroll-x">
+        <table class="data" id="prod-table"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modal-add" hidden>
+    <div class="modal" role="dialog" aria-labelledby="add-title">
+      <h2 id="add-title">নতুন পণ্য — মাস্টার এন্ট্রি</h2>
+      <p class="muted" style="margin:0 0 16px">ব্যাচ নম্বর ও ক্রয় মূল্য এখানে নয় — সেগুলো ক্রয় গ্রহণ ধাপে।</p>
+      <div class="field">
+        <label>পণ্যের নাম <span class="req">*</span></label>
+        <input type="text" id="f-name" placeholder="উদাহরণ: Rso.500ml" />
+      </div>
+      <div class="field">
+        <label>কোম্পানি (প্রিন্সিপাল) <span class="req">*</span></label>
+        <select id="f-company">
+          <option value="">নির্বাচন করুন</option>
+          <option>PRAN</option>
+          <option>Square Group</option>
+          <option>ACI Limited</option>
+          <option>Meghna Group</option>
+          <option>City Group</option>
+          <option>Akij Group</option>
+          <option>Abul Khair Group</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>কার্টন সাইজ (প্রতি কার্টনে ইউনিট) <span class="req">*</span></label>
+        <input type="number" id="f-carton" min="1" value="24" />
+      </div>
+      <div class="field">
+        <label>ডিফল্ট বিক্রয় মূল্য (৳) <span class="req">*</span></label>
+        <input type="number" id="f-sell" min="0" step="0.01" placeholder="মূল্য তালিকা — পরবর্তীতে পরিবর্তনযোগ্য" />
+        <p class="hint-inline">ক্রয় মূল্য এখানে নেই · ক্রয় গ্রহণের আগে স্টক = ০</p>
+      </div>
+      <div class="field">
+        <label>বারকোড (ঐচ্ছিক)</label>
+        <input type="text" id="f-barcode" placeholder="—" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="btn-cancel">বাতিল</button>
+        <button type="button" class="btn btn-primary" id="btn-save-product">SKU সংরক্ষণ</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    function render() {
+      const q = (document.getElementById("q").value || "").toLowerCase();
+      const co = document.getElementById("co-filter").value;
+      const rows = SAMPLE.products.filter(p =>
+        (!q || p.name.toLowerCase().includes(q)) && (!co || p.company === co)
+      );
+      document.getElementById("prod-table").innerHTML = `
+        <thead>
+          <tr>
+            <th>পণ্য (SKU)</th>
+            <th>কোম্পানি</th>
+            <th class="num">কার্টন</th>
+            <th class="num">বিক্রয় মূল্য</th>
+            <th class="num">স্টক</th>
+            <th class="num">স্তর</th>
+            <th class="num">ক্রয় rate</th>
+            <th class="num">গড় cost</th>
+            <th class="num">স্টক মূল্য</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows.map(p => {
+          const qty = stockQty(p.id);
+          const nBatch = batchCount(p.id);
+          return `<tr>
+            <td><strong>${p.name}</strong></td>
+            <td><span class="tag">${p.company}</span></td>
+            <td class="num">${p.carton}</td>
+            <td class="num">${fmt(p.sell)}</td>
+            <td class="num">${fmt(qty)}</td>
+            <td class="num">${nBatch ? `<span class="tag">${nBatch}</span>` : "—"}</td>
+            <td class="num">${nBatch ? fmt(lastBuyRate(p.id)) : fmt(p.buy)}</td>
+            <td class="num">${nBatch ? fmt(avgCost(p.id)) : (p.buy ? fmt(p.buy) : "—")}</td>
+            <td class="num">${fmt(stockValue(p.id))}</td>
+            <td>
+              <a class="btn btn-ghost btn-sm" href="stock.html#p${p.id}">স্টক</a>
+            </td>
+          </tr>`;
+        }).join("")}</tbody>`;
+    }
+
+    mountApp({
+      page: "products",
+      title: "পণ্য তালিকা (SKU)",
+      onReady() {
+        const cos = [...new Set(SAMPLE.products.map(p => p.company))];
+        document.getElementById("co-filter").innerHTML += cos.map(c => `<option value="${c}">${c}</option>`).join("");
+        document.getElementById("q").addEventListener("input", render);
+        document.getElementById("co-filter").addEventListener("change", render);
+        render();
+
+        const modal = document.getElementById("modal-add");
+        document.getElementById("btn-add-product").addEventListener("click", () => { modal.hidden = false; });
+        document.getElementById("btn-cancel").addEventListener("click", () => { modal.hidden = true; });
+        modal.addEventListener("click", (e) => { if (e.target === modal) modal.hidden = true; });
+        document.getElementById("btn-save-product").addEventListener("click", () => {
+          const name = document.getElementById("f-name").value.trim();
+          const company = document.getElementById("f-company").value;
+          const carton = +document.getElementById("f-carton").value;
+          const sell = +document.getElementById("f-sell").value;
+          if (!name || !company || !carton || !sell) {
+            toast("প্রয়োজনীয় ঘর পূরণ করুন");
+            return;
+          }
+          const id = Math.max(...SAMPLE.products.map(p => p.id)) + 1;
+          SAMPLE.products.push({ id, name, company, carton, sell });
+          modal.hidden = true;
+          document.getElementById("f-name").value = "";
+          toast(`SKU যোগ হয়েছে: ${name} · স্টক ০ · এখন ক্রয় গ্রহণে ব্যাচ যোগ করুন`);
+          render();
+        });
+      }
+    });
+  </script>
+</body>
+</html>

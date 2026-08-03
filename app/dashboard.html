@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ড্যাশবোর্ড — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note" style="margin-top:0">
+      শীট মডেল: <strong>লোড/স্টক</strong> + <strong>দিনের টাকা সেটেল</strong> (মূল) · মাল Receive ঐচ্ছিক।
+    </p>
+    <div class="grid grid-4" id="kpis"></div>
+    <div class="grid grid-2" style="margin-top:16px">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>আজকের অপারেশন</h2>
+          <a class="btn btn-sm btn-primary" href="load-samari.html">লোড শিট</a>
+        </div>
+        <div id="highlight"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>দ্রুত অ্যাকশন</h2></div>
+        <div class="grid" style="gap:10px">
+          <a class="btn btn-ghost" href="daily-cash.html">দিনের টাকা সেটেল</a>
+          <a class="btn btn-ghost" href="load-samari.html">লোড শিট (Samari)</a>
+          <a class="btn btn-ghost" href="goods-due.html">পণ্য Due / Receive</a>
+          <a class="btn btn-ghost" href="product-summary.html">পণ্য মাসিক সারাংশ</a>
+          <a class="btn btn-ghost" href="help.html">মডিউল ব্যাখ্যা</a>
+          <a class="btn btn-ghost" href="../field/today-load.html">মোবাইল অ্যাপ</a>
+        </div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="panel-head">
+        <h2>সাম্প্রতিক দিনের নেট Receive</h2>
+        <a class="btn btn-sm btn-ghost" href="daily-cash.html">সব দেখুন</a>
+      </div>
+      <div class="scroll-x">
+        <table class="data" id="cash-table"></table>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "dashboard",
+      title: "ড্যাশবোর্ড",
+      onReady() {
+        const k = SAMPLE.kpis;
+        document.getElementById("kpis").innerHTML = [
+          ["আজকের বিক্রয় ৳", k.salesToday, "Per Day sales"],
+          ["নেট Receive ৳", k.netReceiveToday, "Total Receive Amount"],
+          ["টাকা Due ৳", k.moneyDueToday, "দিনের ধার/বাকি"],
+          ["মাসিক নিট লাভ ৳", k.profitMonthNet, "লাভ − কমিশন/খরচ"]
+        ].map(([label, val, hint]) => `
+          <div class="kpi">
+            <div class="kpi-label">${label}</div>
+            <div class="kpi-value">${fmt(val)}</div>
+            <div class="kpi-hint">${hint}</div>
+          </div>`).join("");
+
+        document.getElementById("highlight").innerHTML = `
+          <div class="stat-row">
+            <div><span>লোড ইউনিট</span> ${fmt(k.deliveries)}</div>
+            <div><span>ফেরত</span> ${fmt(k.returns)}</div>
+            <div><span>স্টক মূল্য</span> ৳${fmt(k.stockValue)}</div>
+          </div>
+          <p class="muted" style="margin:12px 0 0">SR: মনির / মনিরুজ্জা / আরিফ · DSR মানিক · সন্তো</p>`;
+
+        const days = SAMPLE.dailyCash.filter((d) => d.sales || d.due || d.credit);
+        document.getElementById("cash-table").innerHTML = `
+          <thead><tr>
+            <th>তারিখ</th><th class="num">বিক্রয়</th><th class="num">Due</th>
+            <th class="num">Credit</th><th class="num">নেট Receive</th>
+          </tr></thead>
+          <tbody>${days.map((d) => `
+            <tr>
+              <td>${d.date}</td>
+              <td class="num">${fmt(d.sales)}</td>
+              <td class="num">${fmt(d.due)}</td>
+              <td class="num">${fmt(d.credit)}</td>
+              <td class="num"><strong>${fmt(netReceiveAmount(d))}</strong></td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

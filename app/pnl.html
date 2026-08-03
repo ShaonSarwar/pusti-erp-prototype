@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>লাভ-ক্ষতি — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      শীট: পণ্য grসস লাভ (sale − cost) − কমিশন − operating − SR sort − manager = নিট।
+      Jan 2026 ধরনের নমুনা সংখ্যা।
+    </p>
+    <div class="toolbar">
+      <label class="muted">মাস</label>
+      <input class="input" type="month" value="2026-01" />
+    </div>
+    <div class="grid grid-2">
+      <div class="panel">
+        <div class="panel-head"><h2>পণ্য লাভ (গ্রস)</h2></div>
+        <table class="data" id="g"></table>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>দিনের খরচ (সেটেল থেকে)</h2></div>
+        <table class="data" id="c"></table>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px">
+      <div class="stat-row" id="bot"></div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "pnl",
+      title: "লাভ-ক্ষতি (শীট স্টাইল)",
+      onReady() {
+        const m = SAMPLE.monthPnl;
+        document.getElementById("g").innerHTML = `
+          <tr><td>Total sale</td><td class="num">৳ ${fmt(m.sales)}</td></tr>
+          <tr><td>COGS (purchase rate × deliv)</td><td class="num">৳ ${fmt(m.cogs)}</td></tr>
+          <tr><td><strong>Gross profit</strong></td><td class="num"><strong>৳ ${fmt(m.grossProfit)}</strong></td></tr>`;
+        document.getElementById("c").innerHTML = `
+          <tr><td>কমিশন</td><td class="num">৳ ${fmt(m.commission)}</td></tr>
+          <tr><td>Operating</td><td class="num">৳ ${fmt(m.operating)}</td></tr>
+          <tr><td>SR/DSR Sort (মোট)</td><td class="num">৳ ${fmt(m.sorts)}</td></tr>
+          <tr><td>Manager</td><td class="num">৳ ${fmt(m.manager)}</td></tr>
+          <tr><td><strong>Total cost</strong></td><td class="num"><strong>৳ ${fmt(m.totalCost)}</strong></td></tr>`;
+        document.getElementById("bot").innerHTML = `
+          <div><span>নিট লাভ</span> ৳ ${fmt(m.netProfit)}</div>
+          <div><span>টাকা Due − Credit</span> ৳ ${fmt(m.netMoneyDue)}</div>
+          <div><span>Due মোট / Credit মোট</span> ৳ ${fmt(m.moneyDue)} / ${fmt(m.moneyCredit)}</div>`;
+      }
+    });
+  </script>
+</body>
+</html>

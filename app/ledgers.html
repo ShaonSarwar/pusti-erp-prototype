@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>হিসাব খাতা — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <select class="select" id="party">
+        <option>রহিম স্টোর</option>
+        <option>নিউ বাজার মার্ট</option>
+        <option>মেসার্স আলম</option>
+        <option>পুষ্টি সেন্ট্রাল (সরবরাহকারী)</option>
+      </select>
+      <button class="btn btn-ghost" data-toast="ফিল্টার (ডেমো)">প্রদর্শন</button>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h2>হিসাব খাতা (গ্রাহক)</h2><span class="tag tag-warn">পাওনা ৳১২,৪৫০</span></div>
+      <table class="data">
+        <thead>
+          <tr><th>তারিখ</th><th>বিবরণ</th><th class="num">ডেবিট</th><th class="num">ক্রেডিট</th><th class="num">ব্যালেন্স</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>২০২৬-০৩-০১</td><td>প্রারম্ভিক ব্যালেন্স</td><td class="num">—</td><td class="num">—</td><td class="num">১৪,৪৫০</td></tr>
+          <tr><td>২০২৬-০৩-১০</td><td>বিক্রয় INV-2388</td><td class="num">৮,০০০</td><td class="num">—</td><td class="num">২২,৪৫০</td></tr>
+          <tr><td>২০২৬-০৩-১২</td><td>কালেকশন (নগদ)</td><td class="num">—</td><td class="num">৫,০০০</td><td class="num">১৭,৪৫০</td></tr>
+          <tr><td>২০২৬-০৩-১৫</td><td>কালেকশন (নগদ)</td><td class="num">—</td><td class="num">৫,০০০</td><td class="num">১২,৪৫০</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>mountApp({ page: "ledgers", title: "হিসাব খাতা (গ্রাহক)" });</script>
+</body>
+</html>

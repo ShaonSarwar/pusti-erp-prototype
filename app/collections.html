@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>কালেকশন — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      গ্রাহক-ভিত্তিক আদায় (লেজার)। শীটের দিনভিত্তিক <strong>Credit / Due</strong> মোট
+      <a href="daily-cash.html">দিনের টাকা সেটেল</a>-এ জমা হয় — সেটা প্রধান দৈনিক স্ক্রিন।
+    </p>
+    <div class="split">
+      <div class="panel">
+        <div class="panel-head"><h2>গ্রাহক কালেকশন</h2></div>
+        <div class="field"><label>তারিখ</label><input type="date" value="2026-01-07" /></div>
+        <div class="field"><label>গ্রাহক</label>
+          <select>
+            <option>রহিম স্টোর</option>
+            <option>নিউ বাজার মার্ট</option>
+            <option>মেসার্স আলম</option>
+          </select>
+        </div>
+        <div class="field"><label>পরিমাণ (৳)</label><input type="number" value="5000" /></div>
+        <div class="field"><label>মাধ্যম</label>
+          <select><option>নগদ</option><option>ব্যাংক</option><option>মোবাইল</option></select>
+        </div>
+        <div class="field"><label>SR</label>
+          <select><option>মনির</option><option>মনিরুজ্জা</option><option>আরিফ</option></select>
+        </div>
+        <button class="btn btn-primary" data-toast="কালেকশন (ডেমো) — দিনের Credit-এ যোগ হতে পারে">সংরক্ষণ</button>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h2>সাম্প্রতিক</h2></div>
+        <table class="data" id="tbl"></table>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "collections",
+      title: "গ্রাহক কালেকশন",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead><tr><th>তারিখ</th><th>গ্রাহক</th><th class="num">৳</th><th>মাধ্যম</th><th>SR</th></tr></thead>
+          <tbody>${SAMPLE.collections.map((c) => `
+            <tr>
+              <td>${c.date}</td><td>${c.party}</td>
+              <td class="num">${fmt(c.amount)}</td>
+              <td>${c.mode}</td><td>${c.by}</td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

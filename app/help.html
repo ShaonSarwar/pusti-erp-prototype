@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>মডিউল ব্যাখ্যা — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+  <style>
+    .help h3 { margin: 22px 0 8px; font-size: 1.05rem; color: var(--accent-dark); }
+    .help table.data th { white-space: normal; }
+    .help ol, .help ul { margin: 8px 0 8px 1.2rem; }
+    .help li { margin: 4px 0; }
+    .help .layer { border-left: 3px solid var(--accent); padding-left: 12px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="panel help">
+      <p class="note" style="margin-top:0">
+        Pusti 2026 শীট থেকে সংশোধিত মডেল। শীটে <strong>তিন স্তর</strong> একসাথে আছে — ERP-ও সেভাবে সাজানো।
+      </p>
+
+      <div class="layer">
+        <h3 style="margin-top:0">স্তর A — দিন × পণ্য (মাল)</h3>
+        <p>প্রতিদিন কলাম ব্লক: Due Quantity, Balance, Receive (মাল), Samari, Firot, Delivery, rate, stock।</p>
+        <ul>
+          <li><strong>Samari</strong> → লোড/ইস্যু (কার্টন+পিস) — মনির / মনিরুজ্জা</li>
+          <li><strong>Firot</strong> → ফেরত</li>
+          <li><strong>Delivery</strong> = Samari − Firot</li>
+          <li><strong>Stock</strong> = আগের + Receive − Delivery</li>
+          <li><strong>Due Quantity / Balance</strong> = মাল পাওয়া বাকি; Receive দিয়ে কমে</li>
+          <li>Receive <strong>খুব কম দিনে</strong> — আলাদা ভারী মডিউল overwork</li>
+        </ul>
+        <p>মডিউল: <a href="load-samari.html">লোড</a> · <a href="return-firot.html">ফেরত</a> · <a href="stock.html">স্টক</a> · <a href="goods-due.html">পণ্য Due</a> · <a href="purchase-receive.html">মাল আসা (ঐচ্ছিক)</a></p>
+      </div>
+
+      <div class="layer">
+        <h3>স্তর B — পণ্য মাসিক সারাংশ (UO–UY)</h3>
+        <p>প্রতি সারি = পণ্য; সংখ্যা = মাসের যোগ (sale, receive tk, profit, due product amount, stock carton)।</p>
+        <p>মডিউল: <a href="product-summary.html">পণ্য মাসিক সারাংশ</a></p>
+      </div>
+
+      <div class="layer">
+        <h3>স্তর C — দিনের টাকা (UZ–VO) ★ গুরুত্বপূর্ণ</h3>
+        <p>প্রতি সারি ≈ <strong>ক্যালেন্ডার দিন</strong>। Due এখানে = <em>টাকার বাকি</em>।</p>
+        <div class="scroll-x">
+          <table class="data">
+            <thead><tr><th>কলাম</th><th>মানে</th></tr></thead>
+            <tbody>
+              <tr><td>Per Day sales</td><td>ঐ দিনের মোট বিক্রি ৳</td></tr>
+              <tr><td>Due</td><td>ধারে/বাকি টাকা</td></tr>
+              <tr><td>Credit</td><td>আদায় / ক্রেডিট</td></tr>
+              <tr><td>D:Commission</td><td>কমিশন</td></tr>
+              <tr><td>Operating Cost</td><td>অপারেটিং খরচ</td></tr>
+              <tr><td>SR Sort / Over</td><td>মনির, আরিফ, মানিক, সন্তো short/over</td></tr>
+              <tr><td>Manager</td><td>ম্যানেজার অ্যাডজাস্ট</td></tr>
+              <tr><td>Banking Amount</td><td>ব্যাংক জমা</td></tr>
+              <tr><td><strong>Total Receive Amount</strong></td><td>নেট টাকা: (sales+credit+over+mgr) − (due+comm+ops+sort)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>মডিউল: <a href="daily-cash.html">দিনের টাকা সেটেল</a></p>
+      </div>
+
+      <h3>Due — দুই অর্থ (মিক্স করবেন না)</h3>
+      <table class="data">
+        <thead><tr><th>কোথায়</th><th>মানে</th></tr></thead>
+        <tbody>
+          <tr><td>দিন ব্লক Due Quantity</td><td>মাল qty পাওয়া বাকি</td></tr>
+          <tr><td>ডানপাশ Due</td><td>টাকা বাকি / ধার</td></tr>
+        </tbody>
+      </table>
+
+      <h3>ক্রয়মূল্য</h3>
+      <p><strong>Due price</strong> ≈ অর্ডার/due rate · <strong>Purchase Unit Price</strong> ≈ স্টক/লাভের cost — শীটে ~৯১% একই। ERP-এ সাধারণত এক working rate যথেষ্ট; মাল্টি-ব্যাচ ঐচ্ছিক।</p>
+
+      <h3>Sheet2 Undelevary</h3>
+      <p>শুধু কয়েক SKU (৫L / ২L / ৮০ml)-এর due/clear ব্যালান্স — পূর্ণ লেজার নয়। → <a href="undelivery.html">Undelevary</a></p>
+
+      <h3>সহজ দৈনিক কাজ</h3>
+      <ol>
+        <li>লোড (Samari) ± ফেরত → স্টক</li>
+        <li>দিনের টাকা সেটেল (বিক্রি, due, credit, কমিশন, sort → নেট receive)</li>
+        <li>কদাচিৎ: মাল Receive / পণ্য Due</li>
+      </ol>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>mountApp({ page: "help", title: "মডিউল ব্যাখ্যা (শীট-ম্যাচ)" });</script>
+</body>
+</html>

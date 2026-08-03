@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Undelevary — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <p class="note">
+      শীট <strong>Sheet2 “Undelevary”</strong> — শুধু কয়েক SKU (৫L / ২L / ৮০ml) due/clear ট্র্যাকার।
+      পূর্ণ স্টক লেজার নয়। টাকার due → <a href="daily-cash.html">দিনের টাকা</a> ·
+      সব পণ্যের due qty → <a href="goods-due.html">পণ্য Due</a>।
+    </p>
+    <div class="toolbar">
+      <button class="btn btn-primary" data-toast="নতুন এন্ট্রি (ডেমো)">+ এন্ট্রি</button>
+      <button class="btn btn-ghost" data-toast="ক্লিয়ারেন্স (ডেমো)">ক্লিয়ারেন্স</button>
+    </div>
+    <div class="panel">
+      <div class="scroll-x">
+        <table class="data" id="tbl"></table>
+      </div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    mountApp({
+      page: "undelivery",
+      title: "Undelevary (Sheet2 · সীমিত SKU)",
+      onReady() {
+        document.getElementById("tbl").innerHTML = `
+          <thead>
+            <tr>
+              <th>পাওনা তারিখ</th>
+              <th class="num">৫লিটার</th>
+              <th class="num">২লিটার</th>
+              <th class="num">৮০মিলি</th>
+              <th>ক্লিয়ারেন্স</th>
+              <th class="num">অবশিষ্ট ৫L</th>
+              <th class="num">অবশিষ্ট ২L</th>
+              <th class="num">অবশিষ্ট ৮০</th>
+            </tr>
+          </thead>
+          <tbody>${SAMPLE.undelivery.map((u) => `
+            <tr>
+              <td>${u.dueDate}</td>
+              <td class="num">${fmt(u.p5)}</td>
+              <td class="num">${fmt(u.p2)}</td>
+              <td class="num">${fmt(u.p80)}</td>
+              <td>${u.clear}</td>
+              <td class="num">${fmt(u.bal5)}</td>
+              <td class="num">${fmt(u.bal2)}</td>
+              <td class="num">${fmt(u.bal80)}</td>
+            </tr>`).join("")}</tbody>`;
+      }
+    });
+  </script>
+</body>
+</html>

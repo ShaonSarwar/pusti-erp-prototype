@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>গ্রাহক — PUSTI ERP</title>
+  <link rel="stylesheet" href="../assets/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="toolbar">
+      <input class="input" placeholder="গ্রাহক খুঁজুন…" style="min-width:200px" id="q" />
+      <span class="spacer"></span>
+      <button class="btn btn-primary" data-toast="নতুন গ্রাহক (ডেমো)">+ গ্রাহক</button>
+    </div>
+    <div class="panel">
+      <div class="scroll-x"><table class="data" id="tbl"></table></div>
+    </div>
+  </div>
+  <script src="../assets/sample-data.js"></script>
+  <script src="../assets/app.js"></script>
+  <script>
+    function render() {
+      const q = (document.getElementById("q").value || "").toLowerCase();
+      const rows = SAMPLE.parties.filter(p => !q || p.name.includes(q) || p.route.includes(q));
+      document.getElementById("tbl").innerHTML = `
+        <thead><tr>
+          <th>গ্রাহক</th><th>রুট</th><th>মোবাইল</th>
+          <th class="num">পাওনা (৳)</th><th class="num">ক্রেডিট সীমা</th><th></th>
+        </tr></thead>
+        <tbody>${rows.map(p => `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.route}</td><td>${p.phone}</td>
+            <td class="num">${fmt(p.due)}</td>
+            <td class="num">${fmt(p.credit)}</td>
+            <td><button class="btn btn-ghost btn-sm" data-toast="গ্রাহক হিসাব (ডেমো)">হিসাব খাতা</button></td>
+          </tr>`).join("")}</tbody>`;
+    }
+    mountApp({ page: "parties", title: "গ্রাহক (রিটেইলার)", onReady() {
+      document.getElementById("q").addEventListener("input", render);
+      render();
+    }});
+  </script>
+</body>
+</html>
